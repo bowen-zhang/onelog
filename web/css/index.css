@@ -1,0 +1,82 @@
+body {
+	background: linear-gradient(
+	  to bottom,
+	  #222,
+	  #222 50%,
+	  #333 50%,
+	  #333
+	);
+	background-size: 100% 4px;
+}
+
+.Brand {
+	font-family: 'Passion One', cursive;
+	font-size: 48px;
+	color: white;
+	line-height: 200%;
+	padding-left: 20px;
+}
+
+.Table {
+	display: table;
+	border: solid 7px black;
+	padding: 10px;
+	background-color: #fffef4;
+	width: 1800px;
+}
+
+.HeaderRow, .FooterRow {
+	display: table-row;
+}
+
+.HeaderRow .Column {
+	border-top: solid 1px #aaaaaa;
+	font-family: 'Arial';
+	font-size: 13px;
+	color: black;
+}
+
+.Row {
+	display: table-row;
+}
+
+.Row:nth-child(even) {
+	background-color: #eeede4;	
+}
+
+.Row:nth-child(odd) {
+}
+
+.Row .Column, .FooterRow .Column {
+	font-family: 'Kalam', cursive;
+	font-size: 13px;
+	color: #1519a2;
+}
+
+.FooterRow .NameColumn {
+	font-family: 'Arial';
+	font-size: 13px;
+	color: black;
+}
+
+.Column {
+	display: table-cell;
+	border-right: solid 1px #aaaaaa;
+	border-bottom: solid 1px #aaaaaa;
+	text-align: center;
+	vertical-align: middle;
+	padding: 2px;
+}
+
+.Column:first-of-type {
+	border-left: solid 1px #aaaaaa;
+}
+
+.Remarks {
+	width: 300px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	text-align:left;
+	font-size:80%;
+}

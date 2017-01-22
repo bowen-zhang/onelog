@@ -1,112 +1,336 @@
-app = angular.module('App', [])
+let _logs = null;
 
-app.config(function($interpolateProvider) {
-    $interpolateProvider.startSymbol('[[');
-    $interpolateProvider.endSymbol(']]');
-});
+function OneLogApp() {
 
-app.controller('LogEntryController', function($scope, $http) {
+	// Initialize Firebase
+	const config = {
+		apiKey: "AIzaSyAIBQALpCmZrVfxtdLGRVg_6guTGT2KAfw",
+		authDomain: "onelog-46845.firebaseapp.com",
+		databaseURL: "https://onelog-46845.firebaseio.com",
+		storageBucket: "onelog-46845.appspot.com",
+		messagingSenderId: "221150706298"
+	};
 
-    $http.get('/api/log_entry_field_type').success(function(data) {
-        field_types = {};
-        for (type of data) {
-            field_types[type.id] = type;
-        }
-        $scope.field_types = field_types;
+	firebase.initializeApp(config);
 
-        $http.get('/api/log_entry').success(function(data) {
-            $scope.aircrafts = {}
-            logs = Array();
-            for (log of data) {
-                flatLog(log);
-                tail_number = $scope.get(log, 'TailNumber', null);
-                if (tail_number != null && !(tail_number in $scope.aircrafts)) {
-                    $scope.aircrafts[tail_number] = {};
-                    get_aircraft_data(tail_number);
-                }
-                logs.push(log);
-            }
-            $scope.logs = logs
-        });
-    });
+	const auth = firebase.auth();
+	let database = null;
+	let logsRef = null;
+	let queriesRef = null;
+	let logs = [];
+	let queries = {};
 
-    function flatLog(log) {
-        for (field of log.data_fields) {
-            field_type = $scope.field_types[field.type_id.toString()];
-            log[field_type.name] = field;
-        }
-    }
+	let usernameElement = document.getElementById("Username");
+	let signInButton = document.getElementById("signin");
+	let profilePhotoElement = document.getElementById("ProfilePhoto");
+	let queryTextElement = document.getElementById("QueryText");
+	let groupNameField = document.getElementById("GroupName");
+	let dashboardBlock = document.getElementById("Dashboard");
+	let resultElement = document.getElementById("Result");
+	let addQueryButton = document.getElementById("AddQuery");
+	let saveQueryDialog = document.getElementById("SaveQueryDialog");
 
-    function get_aircraft_data(tail_number) {
-        $http.get('/api/aircraft/' + tail_number).success(function(data) {
-            $scope.aircrafts[tail_number] = data;
-        });
-    }
+	signInButton.addEventListener("click", signIn);
+	document.getElementById("Query").addEventListener("click", onQuery);
+	document.getElementById("AddQuery").addEventListener("click", addQuery);
+	document.getElementById("SaveQuery").addEventListener("click", saveQuery);
+	queryTextElement.addEventListener("keyup", function(event) {
+		event.preventDefault();
+		if (event.keyCode == 13) {
+	    	document.getElementById("Query").click();
+		}
+	});
 
-    $scope.get = function(log_entry, field_name, default_value = '', converter = null) {
-        value = default_value;
-        if (field_name in log_entry) {
-            value = log_entry[field_name].raw_value;
-            if (converter != null) {
-                value = converter(value);
-            }
-        }
+	firebase.auth().onAuthStateChanged(function(user) {
+	  if (user) {
+	  	signInButton.style.display = "none";
+	  	profilePhotoElement.src = user.photoURL;
+	  	usernameElement.innerText = user.displayName;
+	    load();
+	  }
+	});
 
-        return value;
-    };
+	function signIn() {
+		var provider = new firebase.auth.GoogleAuthProvider();
+		auth.signInWithPopup(provider).then(function(result) {
+		  // This gives you a Google Access Token. You can use it to access the Google API.
+		  var token = result.credential.accessToken;
+		  // The signed-in user info.
+		  var user = result.user;
+		  // ...
+		}).catch(function(error) {
+		  // Handle Errors here.
+		  var errorCode = error.code;
+		  var errorMessage = error.message;
+		  // The email of the user's account used.
+		  var email = error.email;
+		  // The firebase.auth.AuthCredential type that was used.
+		  var credential = error.credential;
+		  // ...
+		});
+	}
 
-    $scope.get_date = function(log_entry) {
-        return $scope.get(log_entry, 'TimeIn', null, function(x) {
-            return x.substring(4, 6) + '/' + x.substring(6, 8);
-        });
-    };
+	function load() {
+		_logs = logs;
 
-    $scope.get_approach_count = function(log_entry) {
-        return $scope.get(log_entry, 'Approaches', null, function(x) {
-            return eval(x).length;
-        });
-    }
+		database = firebase.database();
+		logsRef = database.ref("logs");
+		queriesRef = database.ref("queries");
 
-    $scope.get_hours = function(log_entry, field_name) {
-        return $scope.get(log_entry, field_name, null, function(x) {
-            value = parseFloat(x) / 3600.0;
-            return value;
-        });
-    }
+		logsRef.orderByChild("TimeOut").on("child_added", function(data) {
+			logs.push(data.val());
+			requestDashboardRefresh();
+		});
 
-    $scope.hour_formatter = function(value) {
-        if (value == null || value == '') {
-            return ''
-        }
-        return value.toFixed(1);
-    }
+		queriesRef.on("child_added", function(data) {
+			queries[data.key] = data.val();
+			requestDashboardRefresh();
+		});
+	}
 
-    $scope.sum = function(func, args = []) {
-        total = 0;
-        func_args = args.slice();
-        func_args.unshift('');
-        for (log_entry of $scope.logs) {
-            func_args[0] = log_entry;
-            value = func.apply(null, func_args);
-            if (value != null) {
-                total += value;
-            }
-        }
+	let dashboardRefreshTimer = null;
+	function requestDashboardRefresh() {
+		if (dashboardRefreshTimer) {
+			clearTimeout(dashboardRefreshTimer);
+		}
 
-        return $scope.hide_zero(total);
-    }
+		dashboardRefreshTimer = setTimeout(refreshDashboard, 500);
+	}
 
-    $scope.number_formatter = function(value) {
-        if (value == null || value == '') {
-            return '';
-        }
-        return Number.parseInt(value);
-    }
+	function refreshDashboard() {
+		dashboardBlock.innerHTML = "";
 
-    $scope.hide_zero = function(value) {
-        if (value == '0' || value == 0) {
-            return '';
-        }
-        return value;
-    }
-});
+		for (let key in queries) {
+			query = queries[key];
+			let result = search(query.query);
+			let queryListElement = dashboardBlock.querySelector("#QueryGroup_" + query.group + " ul");
+			if (!queryListElement) {
+				let groupElement = document.createElement("li");
+				groupElement.id = "QueryGroup_" + query.group;
+				groupElement.innerHTML = `
+					<div class="GroupTitle">${query.group}</div>
+					<div class="GroupContent"><ul></ul></div>`;
+				dashboardBlock.appendChild(groupElement);
+				queryListElement = dashboardBlock.querySelector("#QueryGroup_" + query.group + " ul");
+			}
+
+			let queryElement = document.createElement("li");
+			queryElement.innerHTML = `
+				<div class="mdl-card mdl-shadow--2dp">
+					<div class="mdl-card__title">
+						<h2>${result.title}</h2>
+					</div>
+					<div class="mdl-card__supporting-text">
+						${result.answer}
+					</div>
+					<div class="mdl-card__menu">
+						<button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
+							<i class="material-icons">delete</i>
+						</button>
+					</div>
+				</div>`;
+			queryListElement.appendChild(queryElement);
+			queryElement.querySelector("button").addEventListener("click", function() {
+				queriesRef.child(key).remove(function() {
+					queryElement.remove();
+				});
+			});
+		}
+	}
+
+	const logEntryTemplate = log => html`
+		<div class="Row">
+			<div class="Column">${new Date(log.outTime).getMonth()}/${new Date(log.outTime).getDate()}</div>
+			<div class="Column"></div>
+			<div class="Column">${log.tailNumber}</div>
+			<div class="Column">${log.departureAirport}</div>
+			<div class="Column">${log.arrivalAirport}</div>
+			<div class="Column"><div class="Remarks">${log.remarks}</div></div>
+			<div class="Column"></div>
+			<div class="Column"></div>
+			<div class="Column"></div>
+			<div class="Column"></div>
+			<div class="Column"></div>
+			<div class="Column"></div>
+			<div class="Column"></div>
+			<div class="Column"></div>
+			<div class="Column"></div>
+			<div class="Column"></div>
+			<div class="Column"></div>
+			<div class="Column"></div>
+			<div class="Column"></div>
+			<div class="Column"></div>
+			<div class="Column">${log.totalTime}</div>
+		</div>`;
+	const logEntriesTemplate = logs => html`
+		<div class="Table">
+			<div class="HeaderRow">
+			    <div class="Column">YEAR
+			        <br/>DATE</div>
+			    <div class="Column">ACFT MAKE &amp; MODEL</div>
+			    <div class="Column">ACFT IDENT.</div>
+			    <div class="Column">FROM</div>
+			    <div class="Column">TO</div>
+			    <div class="Column">REMARKS, PROCEDURES, MANEUVERS</div>
+			    <div class="Column">NO. INSTR. APP.</div>
+			    <div class="Column">NO. LDG.</div>
+			    <div class="Column">COMPLEX</div>
+			    <div class="Column">AIRPLANE SEL</div>
+			    <div class="Column">AIRPLANE MEL</div>
+			    <div class="Column">CROSS COUNTRY</div>
+			    <div class="Column">DAY</div>
+			    <div class="Column">NIGHT</div>
+			    <div class="Column">ACTUAL INSTR.</div>
+			    <div class="Column">SIMULATED INSTR.</div>
+			    <div class="Column">GROUND TRAINER</div>
+			    <div class="Column">DUAL RECEIVED</div>
+			    <div class="Column">PILOT IN COMMAND</div>
+			    <div class="Column">SOLO</div>
+			    <div class="Column">TOTAL DURATION OF FLIGHT</div>
+			</div>
+			${logs.map(log => logEntryTemplate(log))}
+		</div>`;
+
+	var qa = {
+		"(?:show me|what are) my flights on (n[0-9a-z]{5})\.?" : {
+			title: (tailnumber) => `Flights on ${tailnumber.toUpperCase()}`,
+			querier: (logs, tailnumber) => {
+				return logs.filter(x => x.tailNumber.toLowerCase() == tailnumber);
+			},
+			answerTemplate: (logs) => {
+				return logEntriesTemplate(logs);
+			}
+		},
+		"what is my total time\??": { 
+			title: "Total Time",
+			aggregator: function(log) { return log.totalTime; },
+			postProcessor: (result) => result.toFixed(1),
+			answerTemplate: "You have {result} hours of total time." 
+		},
+		"(?:show me|what is) my last flight\??": {
+			title: "Last Flight",
+			querier: function(logs) {
+				return logs.sort((a,b) => b.inTime - a.inTime)[0];
+			},
+			answerTemplate: function(log) {
+				return `<div>From: ${log.departureAirport}</div>
+					<div>To: ${log.arrivalAirport}</div>
+					<div>Total Time: ${log.totalTime}</div>`;
+			}
+		},
+		"until when can i take passengers\??": {
+			title: "Recency for Taking Passengers",
+			querier: function(logs) {
+				logs = logs.filter(x => x.dayLandings > 0 || x.nightLandings > 0);
+				logs = logs.sort((a,b) => b.inTime - a.inTime);
+				var total = 0;
+				for (var i = 0; i < logs.length; ++i) {
+					total += logs[i].dayLandings + logs[i].nightLandings;
+					if (total >= 3) {
+						var result = new Date(logs[i].inTime.valueOf());
+						result.setDate(result.getDate() + 90);
+						return result;
+					}
+				}
+			},
+			postProcessor: (result) => moment(result).format("MMM Do, YYYY"),
+			answerTemplate: "You are current to take passengers until {result}."
+		}
+	};
+
+	function processQuery(q) {
+		q = q.toLowerCase();
+		q = q.trim();
+		q = q.replace(/what's/, "what is");
+		if (!q.endsWith("?")) {
+			q += "?";
+		}
+		return q;
+	}
+
+	function onQuery() {
+		let q = queryTextElement.value;
+		let result = search(q);
+
+		if (result) {
+			resultElement.innerHTML = result.answer;
+			addQueryButton.style.display = "inline";
+		} else {
+			resultElement.innerHTML = "Sorry, I don't know."
+			addQueryButton.style.display = "none";
+		}
+	}
+
+	function search(q) {
+		q = processQuery(q);
+		let match = null;
+		let a = null;
+		for(let key in qa) {
+			if (match = q.match(key)) {
+				console.log(`Found matching answer: ${key}.`);
+				a = qa[key];
+				break;
+			}
+		}
+
+		if (!match) {
+			return null;
+		}
+
+		const parameters = match.slice(1);
+		console.log(`Parameters = ${parameters}`);
+
+		let title = null;
+		if (typeof a.title == "string") {
+			title = a.title;
+		} else if (typeof a.title == "function") {
+			title = a.title.apply(null, parameters);
+		}
+
+		console.log(`Title=${title}.`);
+
+		let result = null;
+		if (a.aggregator) {
+			logs.forEach((log) => result += a.aggregator(log));
+		} else if (a.querier) {
+			result = a.querier.apply(null, [logs].concat(parameters));
+		}
+
+		if (a.postProcessor) {
+			result = a.postProcessor(result);
+		}
+
+		console.log(`Result=${result}`);
+
+		let answer = null;
+		if (typeof a.answerTemplate === "string") {
+			answer = a.answerTemplate.replace('{result}', result);
+		} else if (typeof a.answerTemplate === "function") {
+			answer = a.answerTemplate.apply(null, [result].concat(parameters));
+		}
+
+		return {
+			title: title,
+			answer: answer
+		};
+	}
+
+	function addQuery() {
+		SaveQueryDialog.showModal();
+	}
+
+	function saveQuery() {
+		queriesRef.push({
+			user: firebase.auth().currentUser.uid,
+			query: queryTextElement.value,
+			group: groupNameField.value,
+		});
+		SaveQueryDialog.close();
+		return false;
+	}
+}
+
+window.onload = function() {
+	window.app = new OneLogApp();
+};
+

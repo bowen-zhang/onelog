@@ -7,6 +7,12 @@ from onelog.util import utility
 
 
 @engine.register
+class Date(models.BasicLogEntryFieldType):
+	def __init__(self):
+		models.BasicLogEntryFieldType.__init__(self, display_name='Date', data_type=models.LogEntryFieldDataType.DATE)
+
+
+@engine.register
 class TailNumber(models.BasicLogEntryFieldType):
 	def __init__(self):
 		models.BasicLogEntryFieldType.__init__(self, display_name='Tail Number', data_type=models.LogEntryFieldDataType.SHORT_TEXT)

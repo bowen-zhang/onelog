@@ -1,90 +1,49 @@
-<!DOCTYPE html>
-<html lang="en" ng-app="App">
-
+<html>
 <head>
-	<link href='https://fonts.googleapis.com/css?family=Passion+One' rel='stylesheet' type='text/css'>
-    <link href='https://fonts.googleapis.com/css?family=Kalam' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="/web/css/index.css">
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
-    <script src="/web/js/index.js"></script>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+	<link rel="stylesheet" href="https://code.getmdl.io/1.2.1/material.indigo-pink.min.css">
+	<script defer src="https://code.getmdl.io/1.2.1/material.min.js"></script>
+
+	<link rel="stylesheet" href="/web/css/index.css">
+
+	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/3.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.1/firebase-auth.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/3.6.1/firebase-database.js"></script>
+	<script type="text/javascript" src="/web/js/moment.min.js"></script>
+	<script type="text/javascript" src="/web/js/util.js"></script>
+	<script type="text/javascript" src="/web/js/index.js"></script>
 </head>
-{% raw %}
+<body>
+<div class="Header">
+	<button id="signin">Sign In</button>
+	<div>
+		<img id="ProfilePhoto" /><br/>
+		<span id="Username"></span>
+	</div>
+</div>
 
-<body ng-controller="LogEntryController">
-    <div class="Brand">OneLog</div>
-    <div class="Table">
-        <div class="HeaderRow">
-            <div class="Column">YEAR
-                <br/>DATE</div>
-            <div class="Column">ACFT MAKE &amp; MODEL</div>
-            <div class="Column">ACFT IDENT.</div>
-            <div class="Column">FROM</div>
-            <div class="Column">TO</div>
-            <div class="Column">REMARKS, PROCEDURES, MANEUVERS</div>
-            <div class="Column">NO. INSTR. APP.</div>
-            <div class="Column">NO. LDG.</div>
-            <div class="Column">COMPLEX</div>
-            <div class="Column">AIRPLANE SEL</div>
-            <div class="Column">AIRPLANE MEL</div>
-            <div class="Column">CROSS COUNTRY</div>
-            <div class="Column">DAY</div>
-            <div class="Column">NIGHT</div>
-            <div class="Column">ACTUAL INSTR.</div>
-            <div class="Column">SIMULATED INSTR.</div>
-            <div class="Column">GROUND TRAINER</div>
-            <div class="Column">DUAL RECEIVED</div>
-            <div class="Column">PILOT IN COMMAND</div>
-            <div class="Column">SOLO</div>
-            <div class="Column">TOTAL DURATION OF FLIGHT</div>
-        </div>
-        <div class="Row" ng-repeat="log in logs">
-            <div class="Column">[[ get_date(log) ]]</div>
-            <div class="Column">[[ aircrafts[get(log, 'TailNumber')].model.model ]]</div>
-            <div class="Column">[[ get(log, 'TailNumber') ]]</div>
-            <div class="Column">[[ get(log, 'DepartureAirport') ]]</div>
-            <div class="Column">[[ get(log, 'ArrivalAirport') ]]</div>
-            <div class="Column"><div class="Remarks">[[ get(log, 'Remarks') ]]</div></div>
-            <div class="Column">[[ get_approach_count(log) ]]</div>
-            <div class="Column">[[ hide_zero(get(log, 'DayLanding', 0, number_formatter) + get(log, 'NightLanding', 0, number_formatter)) ]]</div>
-            <div class="Column"></div>
-            <div class="Column"></div>
-            <div class="Column"></div>
-            <div class="Column">[[ hour_formatter(get_hours(log, 'CrossCountryTime50nm')) ]]</div>
-            <div class="Column">[[ hour_formatter(get_hours(log, 'DayTime')) ]]</div>
-            <div class="Column">[[ hour_formatter(get_hours(log, 'NightTime')) ]]</div>
-            <div class="Column">[[ hour_formatter(get_hours(log, 'ActualInstrumentTime')) ]]</div>
-            <div class="Column">[[ hour_formatter(get_hours(log, 'SimulatedInstrumentTime')) ]]</div>
-            <div class="Column"></div>
-            <div class="Column">[[ hour_formatter(get_hours(log, 'DualReceivedTime')) ]]</div>
-            <div class="Column">[[ hour_formatter(get_hours(log, 'PicTime')) ]]</div>
-            <div class="Column">[[ hour_formatter(get_hours(log, 'SoloTime')) ]]</div>
-            <div class="Column">[[ hour_formatter(get_hours(log, 'TotalTime')) ]]</div>
-        </div>
-        <div class="FooterRow" ng-if="logs">
-            <div class="Column"></div>
-            <div class="Column"></div>
-            <div class="Column"></div>
-            <div class="Column"></div>
-            <div class="Column"></div>
-            <div class="Column NameColumn">PAGE TOTAL</div>
-            <div class="Column">[[ sum(get_approach_count) ]]</div>
-            <div class="Column">[[ sum(get, ['DayLanding', 0, number_formatter]) + sum(get, ['NightLanding', 0, number_formatter]) ]]</div>
-            <div class="Column"></div>
-            <div class="Column"></div>
-            <div class="Column"></div>
-            <div class="Column">[[ hour_formatter(sum(get_hours, ['CrossCountryTime50nm'])) ]]</div>
-            <div class="Column">[[ hour_formatter(sum(get_hours, ['DayTime'])) ]]</div>
-            <div class="Column">[[ hour_formatter(sum(get_hours, ['NightTime'])) ]]</div>
-            <div class="Column">[[ hour_formatter(sum(get_hours, ['ActualInstrumentTime'])) ]]</div>
-            <div class="Column">[[ hour_formatter(sum(get_hours, ['SimulatedInstrumentTime'])) ]]</div>
-            <div class="Column"></div>
-            <div class="Column">[[ hour_formatter(sum(get_hours, ['DualReceivedTime'])) ]]</div>
-            <div class="Column">[[ hour_formatter(sum(get_hours, ['PicTime'])) ]]</div>
-            <div class="Column">[[ hour_formatter(sum(get_hours, ['SoloTime'])) ]]</div>
-            <div class="Column">[[ hour_formatter(sum(get_hours, ['TotalTime'])) ]]</div>
-        </div>
-    </div>
+<div id="QuerySection">
+	<div class="mdl-textfield mdl-js-textfield">
+		<input class="mdl-textfield__input" type="text" id="QueryText" value="show me my flights on N328TS." />
+		<label class="mdl-textfield__label" for="QueryText">What would you like to know?</label>
+	</div>
+	<button class="mdl-button mdl-js-button mdl-button--fab" id="Query"><i class="material-icons">search</i></button>
+</div>
+
+<div id="Result"></div>
+<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab" id="AddQuery"><i class="material-icons">add</i></button>
+
+<dialog class="mdl-dialog" id="SaveQueryDialog">
+	<div class="mdl-textfield mdl-js-textfield">
+		<input class="mdl-textfield__input" type="text" id="GroupName">
+		<label class="mdl-textfield__label" for="GroupName">Name of group for this query</label>
+	</div>
+	<button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" id="SaveQuery">Save</button>
+</dialog>
+
+<ul id="Dashboard"></ul>
+
+
 </body>
-{% endraw %}
-
 </html>

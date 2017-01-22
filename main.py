@@ -1,7 +1,7 @@
 import flask
 import flask_restful
 
-from onelog.core import api
+from onelog.api import api
 from onelog.core import models
 
 app = flask.Flask(
@@ -16,9 +16,9 @@ flask_api.add_resource(api.LogEntryFieldType, '/api/log_entry_field_type')
 flask_api.add_resource(api.Aircraft, '/api/aircraft/<string:tail_number>')
 
 
-@app.route("/", methods=['GET'])
+@app.route("/logbook", methods=['GET'])
 def index():
-    return flask.render_template('index.html')
+    return flask.render_template('logbook.html')
 
 @app.route('/api/log-count')
 def get_logs():
@@ -27,4 +27,4 @@ def get_logs():
 	return logs.to_json()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=80, debug=False, threaded=True)

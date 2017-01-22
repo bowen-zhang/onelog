@@ -1,47 +1,3 @@
-.Header {
-	text-align:right;
-}
-
-#ProfilePhoto {
-	width: 40px;
-	height: 40px;
-	border-radius: 20px;
-}
-
-#QuerySection {
-	padding-top: 150px;
-	padding-bottom: 20px;
-	text-align: center;
-}
-
-#Dashboard, #Dashboard .GroupContent ul {
-	list-style-type:none;
-	padding: 0;
-}
-
-.mdl-card__title h2 {
-	font-size: 24;
-}
-
-#AddQuery {
-	display: none;
-}
-
-index.css
-Details
-Activity
-EARLIER THIS YEAR
-
-You created an item in
-Jun 24
-Google Drive Folder
-static
-Style Sheet
-index.css
-No recorded activity before June 24, 2016
-All selections cleared 
-New Team Drive
-
 body {
 	background: linear-gradient(
 	  to bottom,
@@ -51,6 +7,14 @@ body {
 	  #333
 	);
 	background-size: 100% 4px;
+}
+
+.Brand {
+	font-family: 'Passion One', cursive;
+	font-size: 48px;
+	color: white;
+	line-height: 200%;
+	padding-left: 20px;
 }
 
 .Table {

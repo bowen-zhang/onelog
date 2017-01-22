@@ -430,6 +430,7 @@ class LogTenProImporter(DataImporter):
 		entry = models.LogEntry()
 		entry.type = models.LogEntryType.FLIGHT
 
+		entry.add_field(essential.Date, self.date)
 		entry.add_field(essential.TailNumber, self.tail_number)
 		entry.add_field(essential.DepartureAirport, self.departure_airport)
 		entry.add_field(essential.ArrivalAirport, self.arrival_airport)
@@ -491,11 +492,11 @@ class LogTenProImporter(DataImporter):
 if __name__ == "__main__":
 	importer_types = [
 		#EngineDataImporter, 
-		AircraftModelImporter,
+		#AircraftModelImporter,
 		#AirportImporter,
 		#AircraftImporter,
 		#AirmanImporter,
-		#LogTenProImporter,
+		LogTenProImporter,
 	]
 	for importer_type in importer_types:
 		with importer_type(commit=True) as importer:

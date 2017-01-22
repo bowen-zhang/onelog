@@ -8,7 +8,17 @@ from onelog.core import models
 
 class LogEntry(flask_restful.Resource):
 	def get(self):
-		json = models.LogEntry.objects(type=models.LogEntryType.FLIGHT).limit(20).to_json()
+		pipeline = [
+		    {'$unwind': '$data_fields'},
+		    {'$match': { 'data_fields.type_id': 5809168768645327672L}},
+		    {'$sort': {'data_fields.raw_value': -1}},
+		    {'$limit': 20},
+		]
+
+		results = list(models.LogEntry.objects.aggregate(*pipeline))
+		ids = [x['_id'] for x in results]
+
+		json = models.LogEntry.objects(pk__in=ids).to_json()
 		return flask.Response(json, status=200, mimetype='application/json')
 
 	def post(self):

@@ -574,3 +574,4 @@ Date	Aircraft ID	Aircraft Type	From	Route	To	On	Out	In	Off	Hobbs Out	Hobbs In	Ta
 2017-01-14	GROUND	GROUND												0	0	0	0	0	0	0	0	0	0	0	0	0	0	1.50	0	0	Bowen Zhang				John Russell Parker III				0	0	0										Aircraft structure, aircraft system, preflight.			0			
 2017-01-16	N2112K	P28A	KPAO		KSNS		1730	1818		260.80	261.60	7330.78	7331.38	0.80	0	0.80		0.80	0	0.80	0	0	0.10	0	0	0	0	0	0	0	Bowen Zhang						1		0	0	0	1;GPS/GNSS;13;KSNS									Go to T&P Aero Refinishers to install wheel pants.			0			
 2017-01-16	N2112K	P28A	KSNS		KHWD		2013	2110		261.60	262.60	7331.38	7332.15	0.95	0	0.95	0	0.95	0	0.95	0	0	0	0	0	0	0	0	0	0	Bowen Zhang						1		0	0	0										Take airplane to Hayward for annual inspection.			0			 
+2017-01-21	N2112K	P28A	KHWD		KPAO		2312	2340		263.2	263.7	7332.23	7332.5	0.5		0.5		0.5													Bowen Zhang						1														Bring airplane back after annual inspection.						

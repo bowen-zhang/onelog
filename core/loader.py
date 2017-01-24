@@ -51,6 +51,14 @@ class StringColumn(DataColumn):
 	pass
 
 
+class BooleanColumn(DataColumn):
+	_FALSE_VALUES = ['false', 'f', 'no', 'n', '0']
+
+	def convert(self, value):
+		value = super(BooleanColumn, self).convert(value)
+		return value and value.lower() not in BooleanColumn._FALSE_VALUES
+
+
 class IntColumn(DataColumn):
 	def convert(self, value):
 		value = super(IntColumn, self).convert(value)

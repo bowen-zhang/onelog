@@ -325,6 +325,7 @@ class LogEntryFieldDataType(enum.Enum):
     DATE = 6
     TIMEDELTA = 7
     OBJECT = 8
+    BOOLEAN = 9
 
 
 class LogEntryFieldType(object):
@@ -379,6 +380,7 @@ class BasicLogEntryFieldType(LogEntryFieldType):
         (LogEntryFieldDataType.DATETIME, lambda x: datetime.datetime.strptime(x, '%Y%m%d %H%M%S'), lambda x: '{:%Y%m%d %H%M%S}'.format(x)),
         (LogEntryFieldDataType.DATE, lambda x: datetime.datetime.strptime(x, '%Y%m%d').date(), lambda x: '{:%Y%m%d}'.format(x)),
         (LogEntryFieldDataType.TIMEDELTA, lambda x: datetime.timedelta(seconds=float(x)), lambda x: str(x.total_seconds())),
+        (LogEntryFieldDataType.BOOLEAN, lambda x: x.upper()=='YES', lambda x: 'YES' if x else 'NO'),
         ]
 
     def __init__(self, display_name, data_type, is_hidden=False):
@@ -489,6 +491,8 @@ class LogEntryStatus(enum.Enum):
 class LogEntry(mongoengine.Document):
     type = extra_fields.IntEnumField(LogEntryType)
 
+    timestamp = fields.DateTimeField()
+
     participants = fields.EmbeddedDocumentListField(Participant)
     data_fields = fields.EmbeddedDocumentListField(LogEntryField)
     historical_data_fields = fields.EmbeddedDocumentListField(LogEntryField)
@@ -522,9 +526,9 @@ class LogEntry(mongoengine.Document):
                     default = field
         return default
 
-    def get_field_value(self, type_id, airman_id=None, default_to_shared=True):
+    def get_field_value(self, type_id, airman_id=None, default_to_shared=True, default_value=None):
         field = self.get_field(type_id, airman_id, default_to_shared)
-        return field.value if field else None
+        return field.value if field else default_value
 
     def dump(self):
         def trim(value, max_len):

@@ -362,6 +362,7 @@ class LogTenProImporter(DataImporter):
 	time_in = loader.TimeColumn('In', fmt='%H%M')
 	tach_out = loader.FloatColumn('Tach Out')
 	tach_in = loader.FloatColumn('Tach In')
+	total_time = loader.TimeDeltaColumn('Total Time', preprocessor=hours_to_timedelta)
 	sim_inst = loader.TimeDeltaColumn('Sim Inst', preprocessor=hours_to_timedelta)
 	actual_inst = loader.TimeDeltaColumn('Actual Inst', preprocessor=hours_to_timedelta)
 	pic = loader.IntColumn('PIC/P1 Crew', preprocessor=name_to_airman_id)
@@ -381,6 +382,7 @@ class LogTenProImporter(DataImporter):
 	approach4 = loader.CustomColumn('Approach 4', loader=approach_loader)
 	approach5 = loader.CustomColumn('Approach 5', loader=approach_loader)
 	approach6 = loader.CustomColumn('Approach 6', loader=approach_loader)
+	flight_review = loader.BooleanColumn('Flight Review')
 
 	#Date	Aircraft ID	Aircraft Type	From	Route	To	Out	In	Tach Out	Tach In	Total Time	Multi-Engine	PIC	SIC	Solo	Night	XC	XC Night	Sim Inst	Actual Inst	Dual Rcvd	Dual Given	Sim Inst Given	Act Inst Given	Ground	Student Time	AATD	PIC/P1 Crew	SIC/P2 Crew	Instructor	Safety Pilot	Student	Examiner	Day Ldg	Night Ldg	Student Day Ldg	Student Night Ldg	Holds	Approach 1	Approach 2	Approach 3	Approach 4	Approach 5	Approach 6	Passenger 01	Passenger 02	Passenger 03	Remarks	Student Note	Self Review	Flight Review	Oil Added	Fuel Burned	Fuel Service
 
@@ -430,6 +432,8 @@ class LogTenProImporter(DataImporter):
 		entry = models.LogEntry()
 		entry.type = models.LogEntryType.FLIGHT
 
+		entry.timestamp = self.time_out or datetime.datetime.combine(self.date, datetime.time.min)
+
 		entry.add_field(essential.Date, self.date)
 		entry.add_field(essential.TailNumber, self.tail_number)
 		entry.add_field(essential.DepartureAirport, self.departure_airport)
@@ -437,10 +441,15 @@ class LogTenProImporter(DataImporter):
 		entry.add_field(essential.Route, self.route)
 		entry.add_field(essential.TimeOut, self.time_out)
 		entry.add_field(essential.TimeIn, self.time_in)
+		if not self.time_out and not self.time_in:
+			entry.add_field(essential.TotalTime, self.total_time)
 		entry.add_field(essential.TachOut, self.tach_out)
 		entry.add_field(essential.TachIn, self.tach_in)
 		entry.add_field(essential.ActualInstrumentTime, self.actual_inst)
 		entry.add_field(essential.Remarks, self.remarks)
+
+		if self.flight_review:
+			entry.add_field(essential.FlightReview, True)
 
 		entry.participants = []
 		if self.pic:

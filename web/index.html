@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="en" ng-app="App">
 <head>
 	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 	<link rel="stylesheet" href="https://code.getmdl.io/1.2.1/material.indigo-pink.min.css">
@@ -6,6 +7,7 @@
 
 	<link rel="stylesheet" href="/web/css/index.css">
 
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/3.6.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/3.6.1/firebase-auth.js"></script>
@@ -14,7 +16,7 @@
 	<script type="text/javascript" src="/web/js/util.js"></script>
 	<script type="text/javascript" src="/web/js/index.js"></script>
 </head>
-<body>
+<body ng-controller="SearchController">
 <div class="Header">
 	<button id="signin">Sign In</button>
 	<div>
@@ -23,16 +25,27 @@
 	</div>
 </div>
 
-<div id="QuerySection">
+<form id="QuerySection" ng-submit="search()">
 	<div class="mdl-textfield mdl-js-textfield">
-		<input class="mdl-textfield__input" type="text" id="QueryText" value="show me my flights on N328TS." />
+		<input class="mdl-textfield__input" type="text" ng-model="query" value="show me my flights on N328TS." />
 		<label class="mdl-textfield__label" for="QueryText">What would you like to know?</label>
 	</div>
-	<button class="mdl-button mdl-js-button mdl-button--fab" id="Query"><i class="material-icons">search</i></button>
-</div>
+	<button class="mdl-button mdl-js-button mdl-button--fab" type="submit"><i class="material-icons">search</i></button>
+</form>
 
-<div id="Result"></div>
-<button class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab" id="AddQuery"><i class="material-icons">add</i></button>
+<div class="Result mdl-card mdl-shadow--2dp">
+  <div class="mdl-card__title">
+    <h2 class="mdl-card__title-text" ng-bind-html="full_answer"></h2>
+  </div>
+  <div class="mdl-card__supporting-text" ng-bind-html="details"></div>
+  <div class="mdl-card__actions mdl-card--border">
+  </div>
+  <div class="mdl-card__menu">
+	<button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
+  		<i class="material-icons">add</i>
+	</button>
+  </div>
+</div>
 
 <dialog class="mdl-dialog" id="SaveQueryDialog">
 	<div class="mdl-textfield mdl-js-textfield">

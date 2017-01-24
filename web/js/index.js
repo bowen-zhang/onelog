@@ -1,3 +1,25 @@
+app = angular.module('App', [])
+
+app.config(function($interpolateProvider) {
+    $interpolateProvider.startSymbol('[[');
+    $interpolateProvider.endSymbol(']]');
+});
+
+app.controller('SearchController', function($scope, $http, $sce) {
+
+	$scope.search = function() {
+        $http.get('/api/search', {
+            params: { query: $scope.query || '' }
+        }).success(function(answer) {
+        	console.log(answer);
+        	$scope.short_answer = $sce.trustAsHtml(answer.short_answer);
+        	$scope.full_answer = $sce.trustAsHtml(answer.full_answer);
+        	$scope.details = $sce.trustAsHtml(answer.details);
+        });
+	};
+});
+
+/*
 let _logs = null;
 
 function OneLogApp() {
@@ -23,7 +45,6 @@ function OneLogApp() {
 	let usernameElement = document.getElementById("Username");
 	let signInButton = document.getElementById("signin");
 	let profilePhotoElement = document.getElementById("ProfilePhoto");
-	let queryTextElement = document.getElementById("QueryText");
 	let groupNameField = document.getElementById("GroupName");
 	let dashboardBlock = document.getElementById("Dashboard");
 	let resultElement = document.getElementById("Result");
@@ -334,3 +355,4 @@ window.onload = function() {
 	window.app = new OneLogApp();
 };
 
+*/

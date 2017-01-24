@@ -428,3 +428,9 @@ class Approaches(models.ObjectLogEntryFieldType):
 class Remarks(models.BasicLogEntryFieldType):
 	def __init__(self):
 		models.BasicLogEntryFieldType.__init__(self, display_name='Remarks', data_type=models.LogEntryFieldDataType.LONG_TEXT)
+
+
+@engine.register
+class FlightReview(models.BasicLogEntryFieldType):
+	def __init__(self):
+		models.BasicLogEntryFieldType.__init__(self, display_name='Flight Review', data_type=models.LogEntryFieldDataType.BOOLEAN)

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://code.getmdl.io/1.2.1/material.indigo-pink.min.css">
+  <script defer src="https://code.getmdl.io/1.2.1/material.min.js"></script>
+  <link rel="stylesheet" href="/web/css/new_flight_entry.css">
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
+  <script type="text/javascript" src="/web/js/new_flight_entry.js"></script>
+</head>
+
+<body ng-app="OneLogApp">
+  <div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header" ng-controller="FlightLogEntryController">
+    <header class="mdl-layout__header mdl-color--grey-100 mdl-color-text--grey-600">
+      <div class="mdl-layout__header-row">
+        <span class="mdl-layout-title">New Entry</span>
+      </div>
+    </header>
+    <main class="mdl-layout__content mdl-color--grey-100">
+      <div class="mdl-grid">
+        <form class="mdl-color--white mdl-shadow--2dp mdl-cell mdl-cell--12-col" ng-submit="save()">
+            <ul>
+              <li ng-repeat="group in groups">
+                <div class='GroupTitle'>[[ group.title ]]</div>
+                <ul>
+                  <li ng-repeat="field in group.fields">
+                    <div class="mdl-textfield mdl-js-textfield mdl-cell mdl-cell--12-col mdl-grid">
+                      <label class="mdl-cell mdl-cell--2-col">[[field.displayName]]</label>
+                      <input class="mdl-textfield__input mdl-cell mdl-cell--8-col" id="[[field.name]]"
+                        ng-model="field.value"
+                        type="[[get_input_type(field)]]" step="0.1" />
+                    </div>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+            <div id="SubmitBar">
+              <button type='submit' class='mdl-button mdl-js-button mdl-button--raised mdl-button--colored'><i class="material-icons">save</i>Save</button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </main>
+  </div>
+</body>
+
+</html>

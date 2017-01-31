@@ -1,17 +1,3 @@
-# Copyright 2015 Google Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import abc
 import datetime
 import enum
@@ -188,7 +174,7 @@ class Airport(mongoengine.Document):
 
     @property
     def geolocation(self):
-        return unit.Geolocation(unit.Angle(self.location['coordinates'][0], unit.Angle.DEGREE, unit.Angle.LONGITUDE_RANGE), 
+        return unit.Geolocation(unit.Angle(self.location['coordinates'][0], unit.Angle.DEGREE, unit.Angle.LONGITUDE_RANGE),
                                 unit.Angle(self.location['coordinates'][1], unit.Angle.DEGREE, unit.Angle.LATITUDE_RANGE),
                                 unit.Length(self.elevation, unit.Length.FOOT))
 
@@ -254,7 +240,7 @@ class AirmanCertificateRating(enum.Enum):
     AIRPLANE_MULTIENGINE = 10
     AIRPLANE_MULTIENGINE_LAND = 11
     AIRPLANE_MULTIENGINE_SEA = 12
-    
+
     HELICOPTER = 20
 
     INSTRUMENT_AIRPLANE = 100
@@ -300,11 +286,11 @@ class ComputeContext(object):
     @property
     def log_entry(self):
         return self._log_entry
-    
+
     @property
     def participants(self):
         return self._log_entry.participants
-    
+
     @property
     def current_participant(self):
         return self._current_participant
@@ -342,7 +328,7 @@ class LogEntryFieldType(object):
     @property
     def name(self):
         return type(self).__name__
-    
+
     @property
     def display_name(self):
         return self._display_name
@@ -385,24 +371,33 @@ class BasicLogEntryFieldType(LogEntryFieldType):
 
     def __init__(self, display_name, data_type, is_hidden=False):
         super(BasicLogEntryFieldType, self).__init__(display_name, is_hidden=is_hidden)
+        self._data_type = data_type
+
         converter = [x for x in BasicLogEntryFieldType.CONVERTERS if x[0]==data_type]
         if not converter:
             raise Exception('No converter found for type {0}'.format(data_type))
-        converter = converter[0]        
+        converter = converter[0]
         self._convert_from_string = converter[1]
         self._convert_to_string = converter[2]
+
+    @property
+    def data_type(self):
+        return self._data_type
 
     def to_string(self, value):
         if value is None:
             return None
-
         return self._convert_to_string(value)
 
     def from_string(self, raw_value):
         if not raw_value:
             return None
-
         return self._convert_from_string(raw_value)
+
+    def to_dict(self):
+        data = super(BasicLogEntryFieldType, self).to_dict()
+        data['data_type'] = self._data_type.name
+        return data
 
 
 class ObjectLogEntryFieldType(LogEntryFieldType):
@@ -422,8 +417,13 @@ class ObjectLogEntryFieldType(LogEntryFieldType):
     def from_string(self, raw_value):
         if raw_value is None:
             return None
-
         return json.loads(raw_value, object_hook=self._object_cls.deserialize)
+
+    def to_dict(self):
+        data = super(ObjectLogEntryFieldType, self).to_dict()
+        data['data_type'] = LogEntryFieldDataType.OBJECT.name
+        data['object_class'] = self._object_cls.__name__
+        return data
 
 
 class LogEntryFieldTypeFactory(object):
@@ -502,7 +502,7 @@ class LogEntry(mongoengine.Document):
     last_modified_at = fields.DateTimeField()
 
     status = extra_fields.IntEnumField(LogEntryStatus)
-    
+
     def add_field(self, field_type_cls, value, airman_id=None):
         if not value:
             return
@@ -511,7 +511,7 @@ class LogEntry(mongoengine.Document):
         field.type_id = field_type_cls.id()
         field.airman_id = airman_id
         field.value = value
-        
+
         if self.data_fields is None:
             self.data_fields = []
         self.data_fields.append(field)

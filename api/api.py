@@ -19,11 +19,14 @@ class LogEntry(flask_restful.Resource):
 		ids = [x['_id'] for x in results]
 
 		json = models.LogEntry.objects(pk__in=ids).to_json()
+		print type(json)
 		return flask.Response(json, status=200, mimetype='application/json')
 
 	def post(self):
-		data = flask.request.get_json()
-		log = models.LogEntry.objects.from_json(data)
+		data = flask.request.data
+		print type(data)
+		print data
+		log = models.LogEntry.from_json(data)
 		log.save()
 
 	def put(self):

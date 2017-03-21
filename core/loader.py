@@ -37,7 +37,7 @@ class DataColumn(object):
 	@property
 	def required(self):
 		return self._required
-	
+
 	def get_handler(self, field_name, header_names):
 		return _ColumnHandler(self, field_name, header_names)
 
@@ -146,11 +146,11 @@ class Container(DataColumn):
 	@property
 	def model_type(self):
 		return self._model_type
-	
+
 	@property
 	def definitions(self):
 		return self._definitions
-	
+
 	def get_handler(self, field_name, header_names):
 		return _ContainerHandler(self, field_name, header_names)
 
@@ -203,7 +203,6 @@ class DataLoader(object):
 				for handler in self._handlers:
 					handler.handle(self, self._values)
 			except Exception as e:
-				raise
 				self._total_error += 1
 				continue
 

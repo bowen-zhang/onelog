@@ -26,6 +26,9 @@ app.controller('LogEntryController', function($scope, $http) {
                 }
                 logs.push(log);
             }
+            while (logs.length < 20) {
+                logs.push({});
+            }
             $scope.logs = logs
         });
     });

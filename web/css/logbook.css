@@ -41,7 +41,7 @@ body {
 }
 
 .Row:nth-child(even) {
-	background-color: #eeede4;	
+	background-color: #eeede4;
 }
 
 .Row:nth-child(odd) {
@@ -70,6 +70,10 @@ body {
 
 .Column:first-of-type {
 	border-left: solid 1px #aaaaaa;
+}
+
+.Column:empty:before {
+	content: '\200b';
 }
 
 .Remarks {

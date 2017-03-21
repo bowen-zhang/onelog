@@ -323,7 +323,7 @@ class LogEntryFieldType(object):
 
     @classmethod
     def id(cls):
-        return hash(cls.__name__)
+        return hash(cls.__name__)&0xffffffff
 
     @property
     def name(self):
@@ -562,4 +562,34 @@ class LogEntry(mongoengine.Document):
 
         return s
 
+
+class FlightDataStatus(enum.Enum):
+    UPLOADING = 1
+    UPLOADED = 2
+    PENDING = 3
+    LOCKED = 4
+
+
+class FlightData(mongoengine.Document):
+    flight_id = fields.StringField()
+    data = fields.BinaryField()
+    next_index = fields.IntField()
+    status = extra_fields.IntEnumField(FlightDataStatus)
+    last_update = fields.DateTimeField()
+
+
+
+# Keep in sync with FlightEvent in flight.proto
+class FlightEventType(enum.Enum):
+    NONE = 0
+    POWER_ON = 1
+    ENGINE_START = 2
+    ENGINE_SHUTDOWN = 3
+    POWER_OFF = 4
+
+
+class FlightEvent(mongoengine.Document):
+    flight_id = fields.StringField()
+    timestamp = fields.DateTimeField()
+    event_type = extra_fields.IntEnumField(FlightEventType)
 

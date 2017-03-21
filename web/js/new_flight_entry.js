@@ -154,9 +154,29 @@ app.controller('FlightLogEntryController', function($scope, $http) {
         return str;
     }
 
-    $scope.get_value = function(field) {
-      if (field.name == 'TimeIn' || field.name == 'TimeOut') {
-          return padding(field.value.getHours(), 2) + padding(field.value.getMinutes(), 2) + padding(field.value.getSeconds(), 2);
+    $scope.get_value = function(name) {
+        for (group of $scope.groups) {
+            for (field of group.fields) {
+                if (field.name == name) {
+                    return field.value;
+                }
+            }
+        }
+        return null;
+    };
+
+    $scope.to_raw_value = function(field) {
+      if (field.name == 'TimeOut') {
+          date = $scope.get_value('Date');
+          return padding(date.getFullYear(), 4) + padding(date.getMonth()+1, 2) + padding(date.getDate(), 2) + ' ' + padding(field.value.getHours(), 2) + padding(field.value.getMinutes(), 2) + padding(field.value.getSeconds(), 2);
+      } else if (field.name == 'TimeIn') {
+          date = $scope.get_value('Date');
+          time_out = $scope.get_value('TimeOut');
+          if (time_out > field.value) {
+              date.setHours(date.getHours() + 24);
+          }
+
+          return padding(date.getFullYear(), 4) + padding(date.getMonth()+1, 2) + padding(date.getDate(), 2) + ' ' + padding(field.value.getHours(), 2) + padding(field.value.getMinutes(), 2) + padding(field.value.getSeconds(), 2);
       }
 
       switch(field.type) {
@@ -175,11 +195,18 @@ app.controller('FlightLogEntryController', function($scope, $http) {
           default:
               return field.value;
       }
-    }
+    };
 
     $scope.save = function() {
         let log = {
-            data_fields: []
+            type: 1,
+            data_fields: [],
+            participants: [
+              {
+                airman_id: 4899861,
+                role: 1
+              }
+            ]
         };
         for (group of $scope.groups) {
             for (field of group.fields) {
@@ -187,7 +214,7 @@ app.controller('FlightLogEntryController', function($scope, $http) {
                     log.data_fields.push({
                         airman_id: 4899861,
                         type_id: field.id,
-                        raw_value: $scope.get_value(field)
+                        raw_value: $scope.to_raw_value(field)
                     });
                 }
             }

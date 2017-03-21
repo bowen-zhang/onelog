@@ -75,7 +75,7 @@ class DataImporter(loader.DataLoader):
 	def _import_data(self, complete_signal):
 		while not complete_signal.is_set() or not self._queue.empty():
 			while not complete_signal.is_set() and self._queue.qsize() < DataImporter.MAX_COMMIT_SIZE/3:
-				time.sleep(0.5)	
+				time.sleep(0.5)
 
 			buffer = []
 			while not self._queue.empty() and len(buffer) < DataImporter.MAX_COMMIT_SIZE:
@@ -83,15 +83,15 @@ class DataImporter(loader.DataLoader):
 			if buffer:
 				self._model.objects.insert(buffer, load_bulk=False)
 				self._total_imported += len(buffer)
-			
+
 
 	def _show_progress(self, complete_signal):
 		start = datetime.datetime.now()
 		while not complete_signal.is_set():
 			total_seconds = (datetime.datetime.now() - start).total_seconds()
 			msg = '\r{0:.0f}% Done (queue={1}) ({2:.2f} entities/sec)   '.format(
-				self.progress*100, 
-				self._queue.qsize(), 
+				self.progress*100,
+				self._queue.qsize(),
 				self._total_parsed/total_seconds if total_seconds>0 else 0)
 			sys.stdout.write(msg)
 			sys.stdout.flush()
@@ -119,7 +119,7 @@ class EngineDataImporter(DataImporter):
 	thrust = loader.IntColumn('THRUST')
 
 	def __init__(self, commit=True):
-		super(EngineDataImporter, self).__init__('Engine', models.EngineModel, 'data/ENGINE.txt', commit=commit)
+		super(EngineDataImporter, self).__init__('Engine', models.EngineModel, '../data/ENGINE.txt', commit=commit)
 
 
 def normalize_aircraft_model_code(code):
@@ -150,9 +150,9 @@ class AircraftModelImporter(DataImporter):
 	number_of_seats = loader.IntColumn('NO-SEATS')
 	weight_category = loader.EnumColumn('AC-WEIGHT', enum_type=models.AircraftWeightCategory, preprocessor=lambda x: x[6:])
 	speed = loader.IntColumn('SPEED')
-	
+
 	def __init__(self, commit=True):
-		super(AircraftModelImporter, self).__init__('Aircraft Model', models.AircraftModel, 'data/ACFTREF.txt', commit=commit)
+		super(AircraftModelImporter, self).__init__('Aircraft Model', models.AircraftModel, '../data/ACFTREF.txt', commit=commit)
 
 
 def lats_lons_to_geopt(lats, lons):
@@ -175,7 +175,7 @@ class AirportImporter(DataImporter):
 	elevation = loader.IntColumn('ARPElevation')
 
 	def __init__(self, commit=True):
-		super(AirportImporter, self).__init__('Airport', models.Airport, 'data/NfdcFacilities.txt', delimiter='\t', commit=commit)
+		super(AirportImporter, self).__init__('Airport', models.Airport, '../data/NfdcFacilities.txt', delimiter='\t', commit=commit)
 
 	def parse(self):
 		if self.airport_type != models.AirportType.AIRPORT:
@@ -188,7 +188,7 @@ class AirportImporter(DataImporter):
 		airport.state = self.state
 		airport.location = [self.longitude, self.latitude]
 		airport.elevation = self.elevation
-		return airport		
+		return airport
 
 
 class AircraftImporter(DataImporter):
@@ -215,7 +215,7 @@ class AircraftImporter(DataImporter):
 	expiration_date = loader.DateTimeColumn('EXPIRATION DATE', fmt='%Y%m%d')
 
 	def __init__(self, commit=True):
-		super(AircraftImporter, self).__init__('Aircraft', models.Aircraft, 'data/MASTER.txt', commit=commit)
+		super(AircraftImporter, self).__init__('Aircraft', models.Aircraft, '../data/MASTER.txt', commit=commit)
 
 
 def airman_unique_id_normalizer(id):
@@ -240,7 +240,7 @@ class AirmanImporter(DataImporter):
 		))
 
 	def __init__(self, commit=True):
-		super(AirmanImporter, self).__init__('Pilot', models.Person, 'data/PILOT_BASIC.csv', commit=commit)
+		super(AirmanImporter, self).__init__('Pilot', models.Person, '../data/PILOT_BASIC.csv', commit=commit)
 		self._cert_loader = AirmanCertImporter()
 		self._cert_loader.__enter__()
 		self._cert_loader.next()
@@ -257,7 +257,7 @@ class AirmanImporter(DataImporter):
 		while self._cert_loader.has_data() and self.unique_id == self._cert_loader._unique_id:
 			person.airman_certificates += self._cert_loader.parse()
 			self._cert_loader.next()
-		
+
 		if not person.airman_certificates:
 			return None
 
@@ -286,7 +286,7 @@ class AirmanCertImporter(DataImporter):
 	}
 
 	def __init__(self, commit=True):
-		super(AirmanCertImporter, self).__init__('Pilot Cert', models.AirmanCertificate, 'data/PILOT_CERT.csv', commit=commit)
+		super(AirmanCertImporter, self).__init__('Pilot Cert', models.AirmanCertificate, '../data/PILOT_CERT.csv', commit=commit)
 
 	def parse(self):
 		fields = self.to_dict()
@@ -298,7 +298,7 @@ class AirmanCertImporter(DataImporter):
 			rating = self._string_to_airman_cert_rating(rating_str[2:])
 			if not rating:
 				continue
-				
+
 			airman_cert = models.AirmanCertificate()
 			airman_cert.type = self.type
 			airman_cert.level = self.level
@@ -343,7 +343,7 @@ def name_to_airman_id(name):
 
 
 def hours_to_timedelta(hours):
-	return datetime.timedelta(hours=float(hours)) if hours else None	
+	return datetime.timedelta(hours=float(hours)) if hours else None
 
 def approach_loader(str):
 	if not str:
@@ -387,7 +387,7 @@ class LogTenProImporter(DataImporter):
 	#Date	Aircraft ID	Aircraft Type	From	Route	To	Out	In	Tach Out	Tach In	Total Time	Multi-Engine	PIC	SIC	Solo	Night	XC	XC Night	Sim Inst	Actual Inst	Dual Rcvd	Dual Given	Sim Inst Given	Act Inst Given	Ground	Student Time	AATD	PIC/P1 Crew	SIC/P2 Crew	Instructor	Safety Pilot	Student	Examiner	Day Ldg	Night Ldg	Student Day Ldg	Student Night Ldg	Holds	Approach 1	Approach 2	Approach 3	Approach 4	Approach 5	Approach 6	Passenger 01	Passenger 02	Passenger 03	Remarks	Student Note	Self Review	Flight Review	Oil Added	Fuel Burned	Fuel Service
 
 	def __init__(self, commit=True):
-		super(LogTenProImporter, self).__init__('Log Entry', models.LogEntry, 'data/LogTenExport.txt', delimiter='\t', commit=commit)
+		super(LogTenProImporter, self).__init__('Log Entry', models.LogEntry, '../data/LogTenExport.txt', delimiter='\t', commit=commit)
 		self._compute_engine = engine.ComputeEngine()
 
 	def parse(self):
@@ -500,12 +500,12 @@ class LogTenProImporter(DataImporter):
 
 if __name__ == "__main__":
 	importer_types = [
-		#EngineDataImporter, 
+		#EngineDataImporter,
 		#AircraftModelImporter,
 		#AirportImporter,
 		#AircraftImporter,
-		#AirmanImporter,
-		LogTenProImporter,
+		AirmanImporter,
+		#LogTenProImporter,
 	]
 	for importer_type in importer_types:
 		with importer_type(commit=True) as importer:

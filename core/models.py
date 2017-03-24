@@ -147,6 +147,12 @@ class Aircraft(mongoengine.Document):
       ]
   }
 
+  def get_aircraft_model(self):
+    return AircraftModel.objects(code=self.aircraft_model_code).first()
+
+  def get_engine_model(self):
+    return EngineModel.objects(code=self.engine_model_code).first()
+
 
 class AirportType(enum.Enum):
   AIRPORT = 1
@@ -554,7 +560,7 @@ class LogEntry(mongoengine.Document):
     field = self.get_field(type_id, airman_id, default_to_shared)
     return field.value if field else default_value
 
-  def dump(self):
+  def __repr__(self):
 
     def trim(value, max_len):
       if not value:

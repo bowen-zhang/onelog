@@ -2,6 +2,8 @@ import datetime
 
 from flightdata import flight_pb2
 from flightdata import flight_pb2_grpc
+from onelog.core import analyzer
+from onelog.core import essential
 from onelog.core import models
 from common import pattern
 
@@ -59,3 +61,29 @@ class FlightService(flight_pb2_grpc.FlightServiceServicer, pattern.Logger):
     self.logger.info('Flight data saved.')
 
     return flight_pb2.Receipt(succeed=True)
+
+  def CreateLogEntry(self, request, context):
+    self.logger.info('Creating log entry for flight {0}...'.format(request.id))
+    flight_data = models.FlightData.objects(flight_id=request.id).first()
+    if not flight_data:
+      raise Exception('Flight data {0} is not found.'.format(request.id))
+
+    log_entry = analyzer.FlightDataAnalyzer().analyze(flight_data)
+    self.logger.info('Created log entry:\n{0}'.format(repr(log_entry)))
+    log_entry.save()
+    self.logger.info('Log entry saved.')
+
+    response = flight_pb2.CreateLogEntryResponse()
+    response.succeed = True
+    response.departure_airport = log_entry.get_field_value(
+        essential.DepartureAirport.id())
+    response.arrival_airport = log_entry.get_field_value(
+        essential.ArrivalAirport.id())
+    response.route = log_entry.get_field_value(essential.Route.id())
+    response.total_time = log_entry.get_field_value(
+        essential.TotalTime.id()).total_seconds() / 3600.0
+    response.total_landings = log_entry.get_field_value(
+        essential.DayLanding.id(),
+        default_value=0) + log_entry.get_field_value(
+            essential.NightLanding.id(), default_value=0)
+    return response

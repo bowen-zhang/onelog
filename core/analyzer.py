@@ -25,7 +25,8 @@ class FlightDataAnalyzer(pattern.Logger):
     log_entry.add_field(essential.TailNumber, 'N2112K')
 
     processors = [
-        FlightDataAggregator(),
+        readers.FlightDataAggregator(),
+        readers.FlightDataCorrector(),
         NearbyAirportMarker(),
         StopMarker(),
         DepartureAirportDetector(log_entry),
@@ -41,7 +42,8 @@ class FlightDataAnalyzer(pattern.Logger):
       prev = processor
     reader.read()
     for processor in processors:
-      processor.done()
+      if isinstance(processor, DataProcessor):
+        processor.done()
 
     compute_engine = engine.ComputeEngine()
     compute_engine.compute(log_entry)
@@ -64,18 +66,6 @@ class DataProcessor(object):
 
   def done(self):
     pass
-
-
-class FlightDataAggregator(DataProcessor, pattern.EventEmitter):
-
-  def __init__(self, *args, **kwargs):
-    super(FlightDataAggregator, self).__init__(*args, **kwargs)
-    self._datum = {}
-
-  def on_data(self, timestamp, datum):
-    for data_type in datum:
-      self._datum[data_type] = datum[data_type]
-    self.emit('data', timestamp, dict(self._datum))
 
 
 class NearbyAirportMarker(DataProcessor, pattern.EventEmitter):
@@ -202,7 +192,7 @@ class LandingsDetector(DataProcessor, pattern.EventEmitter):
   def on_data(self, timestamp, datum):
     if 'airport' in datum:
       if self._flying:
-        print 'Landed at {0}'.format(datum['airport'].icao_id)
+        print '{0}: Landed at {1}'.format(timestamp, datum['airport'].icao_id)
         self._landings += 1
       self._flying = False
     else:
@@ -257,3 +247,9 @@ class Dump(DataProcessor, pattern.Logger):
 
   def done(self):
     self._file.close()
+
+
+if __name__ == '__main__':
+  flight_data = models.FlightData.objects().first()
+  log_entry = FlightDataAnalyzer().analyze(flight_data)
+  print repr(log_entry)

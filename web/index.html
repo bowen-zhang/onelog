@@ -1,62 +1,35 @@
-<!DOCTYPE html>
-<html lang="en" ng-app="OneLog">
+<html>
 <head>
-	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-	<link rel="stylesheet" href="https://code.getmdl.io/1.2.1/material.indigo-pink.min.css">
-	<script defer src="https://code.getmdl.io/1.2.1/material.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="index.css" />
 
-	<link rel="stylesheet" href="/web/css/index.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
 
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/3.6.2/firebase.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/3.6.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/3.6.1/firebase-auth.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/3.6.1/firebase-database.js"></script>
-	<script type="text/javascript" src="/web/js/moment.min.js"></script>
-	<script type="text/javascript" src="/web/js/util.js"></script>
-	<script type="text/javascript" src="/web/js/index.js"></script>
+  <script src="https://unpkg.com/vue"></script>
+  <script src="https://cdn.jsdelivr.net/vue.resource/1.2.1/vue-resource.min.js"></script>
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCqhSXRfFZsJ12dy6ohLHTv27WbmO_hRgY&callback=initMap">
+    </script>
 </head>
-<body ng-controller="SearchController">
-<div class="Header">
-	<button id="signin">Sign In</button>
-	<div>
-		<img id="ProfilePhoto" /><br/>
-		<span id="Username"></span>
-	</div>
-</div>
-
-<form id="QuerySection" ng-submit="search()">
-	<div class="mdl-textfield mdl-js-textfield">
-		<input class="mdl-textfield__input" type="text" ng-model="query" value="show me my flights on N328TS." />
-		<label class="mdl-textfield__label" for="QueryText">What would you like to know?</label>
-	</div>
-	<button class="mdl-button mdl-js-button mdl-button--fab" type="submit"><i class="material-icons">search</i></button>
-</form>
-
-<div class="Result mdl-card mdl-shadow--2dp">
-  <div class="mdl-card__title">
-    <h2 class="mdl-card__title-text" ng-bind-html="full_answer"></h2>
+<body>
+  <div id="journey">
+    <div class="departure">
+      <div class="airport-code">{{ departureAirport.code }}</div>
+      <div class="airport-city">{{ departureAirport.city }}, {{departureAirport.state}}</div>
+    </div>
+    <div class="arrival">
+      <div class="airport-code">{{ arrivalAirport.code }}</div>
+      <div class="airport-city">{{ arrivalAirport.city }}, {{arrivalAirport.state}}</div>
+    </div>
+    <div><pre>{{ dump }}</pre></div>
   </div>
-  <div class="mdl-card__supporting-text" ng-bind-html="details"></div>
-  <div class="mdl-card__actions mdl-card--border">
-  </div>
-  <div class="mdl-card__menu">
-	<button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
-  		<i class="material-icons">add</i>
-	</button>
-  </div>
-</div>
+  <div id="map"></div>
+  <form>
+    <input id="timeline" class="mdl-slider mdl-js-slider" type="range"
+    min="0" max="100" value="0" tabindex="0">
+  </form>
 
-<dialog class="mdl-dialog" id="SaveQueryDialog">
-	<div class="mdl-textfield mdl-js-textfield">
-		<input class="mdl-textfield__input" type="text" id="GroupName">
-		<label class="mdl-textfield__label" for="GroupName">Name of group for this query</label>
-	</div>
-	<button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" id="SaveQuery">Save</button>
-</dialog>
-
-<ul id="Dashboard"></ul>
-
-
+  <script src="index.js"></script>
 </body>
 </html>

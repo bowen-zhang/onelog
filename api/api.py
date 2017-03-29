@@ -10,6 +10,7 @@ from webargs.flaskparser import use_kwargs
 
 from common import pattern
 from flightdata import readers
+from flightdata import writers
 from flightdata import definitions
 from onelog.core import essential
 from onelog.core import models
@@ -65,13 +66,11 @@ class LogEntry(flask_restful.Resource):
 
 
 class LogEntryCount(flask_restful.Resource):
-
   def get(self):
     return models.LogEntry.objects.count()
 
 
 class LogEntryFieldType(flask_restful.Resource):
-
   def get(self):
     field_types = models.LogEntryFieldTypeFactory.get_all()
     field_types = [x.to_dict() for x in field_types]
@@ -80,7 +79,6 @@ class LogEntryFieldType(flask_restful.Resource):
 
 
 class Aircraft(flask_restful.Resource):
-
   def get(self, tail_number):
     aircraft = models.Aircraft.objects.get(tail_number=tail_number)
     model = models.AircraftModel.objects.get(code=aircraft.aircraft_model_code)
@@ -91,43 +89,46 @@ class Aircraft(flask_restful.Resource):
     return flask.Response(data, status=200, mimetype='application/json')
 
 
+def _process_flight_data(flight_id, components):
+  flight_data = models.FlightData.objects(flight_id=flight_id).first()
+  if not flight_data:
+    raise Exception('Flight data not found.')
+
+  stream = io.BytesIO(flight_data.data)
+  reader = readers.CompressedFlightDataReader(stream)
+  components = [
+      readers.FlightDataAggregator(),
+      readers.FlightDataCorrector(),
+  ] + components
+  prev = reader
+  for component in components:
+    prev.on('data', component.on_data)
+    prev = component
+  reader.read()
+  for component in components:
+    if isinstance(component, pattern.Closable):
+      component.close()
+
+
 class FlightData(flask_restful.Resource):
-
-  def get(self):
-    flight_data = models.FlightData.objects().first()
-    stream = io.BytesIO(flight_data.data)
-    reader = readers.CompressedFlightDataReader(stream)
-    extractor = GpsDataExtractor()
-    components = [
-        readers.FlightDataAggregator(),
-        readers.FlightDataCorrector(),
-        extractor,
-    ]
-    prev = reader
-    for component in components:
-      prev.on('data', component.on_data)
-      prev = component
-    reader.read()
-    for component in components:
-      if isinstance(component, pattern.Closable):
-        component.close()
-
-    return flask.Response(
-        json.dumps(extractor.data), status=200, mimetype='application/json')
+  def get(self, flight_id):
+    try:
+      data = []
+      _process_flight_data(flight_id, [_GpsDataExtractor(data)])
+      return flask.Response(
+          json.dumps(data), status=200, mimetype='application/json')
+    except:
+      return ''
 
 
-class GpsDataExtractor(object):
+class _GpsDataExtractor(object):
   _THRESHOLD = 0.00001
 
-  def __init__(self):
+  def __init__(self, container):
     self._last_lat = None
     self._last_lon = None
-    self._data = []
+    self._data = container
     self._epoch = datetime.datetime.utcfromtimestamp(0)
-
-  @property
-  def data(self):
-    return self._data
 
   def on_data(self, timestamp, data):
     lat = data[definitions.DataType.
@@ -148,3 +149,12 @@ class GpsDataExtractor(object):
 
     time = (timestamp - self._epoch).total_seconds()
     self._data.append([time, lat.degree, lon.degree, alt.ft])
+
+
+class KmlFile(flask_restful.Resource):
+  def get(self, flight_id):
+    stream = io.BytesIO()
+    _process_flight_data(flight_id, [writers.KmlWriter(stream)])
+    response = flask.make_response(stream.getvalue())
+    response.headers["Content-Disposition"] = "attachment; filename=flight.kml"
+    return response

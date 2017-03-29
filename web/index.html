@@ -13,23 +13,17 @@
     </script>
 </head>
 <body>
-  <div id="journey">
-    <div class="departure">
-      <div class="airport-code">{{ departureAirport.code }}</div>
-      <div class="airport-city">{{ departureAirport.city }}, {{departureAirport.state}}</div>
-    </div>
-    <div class="arrival">
-      <div class="airport-code">{{ arrivalAirport.code }}</div>
-      <div class="airport-city">{{ arrivalAirport.city }}, {{arrivalAirport.state}}</div>
-    </div>
-    <div><pre>{{ dump }}</pre></div>
-  </div>
+<div id="logEntry">
+  <journey :log="log"></journey>
+  <div><pre>{{ dump }}</pre></div>
+  <a v-if="log" :href='"/api/flightdata/kml/" + log.flight_id'>Download KML</a>
   <div id="map"></div>
   <form>
     <input id="timeline" class="mdl-slider mdl-js-slider" type="range"
     min="0" max="100" value="0" tabindex="0">
   </form>
+</div>
+<script src="index.js"></script>
 
-  <script src="index.js"></script>
 </body>
 </html>

@@ -518,6 +518,7 @@ class LogEntry(mongoengine.Document):
   type = extra_fields.IntEnumField(LogEntryType)
 
   timestamp = fields.DateTimeField()
+  flight_id = fields.StringField()
 
   participants = fields.EmbeddedDocumentListField(Participant)
   data_fields = fields.EmbeddedDocumentListField(LogEntryField)

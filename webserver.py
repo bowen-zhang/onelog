@@ -15,7 +15,8 @@ flask_api = flask_restful.Api(app)
 flask_api.add_resource(api.LogEntry, '/api/log_entry')
 flask_api.add_resource(api.LogEntryCount, '/api/log_entry_count')
 flask_api.add_resource(api.LogEntryFieldType, '/api/log_entry_field_type')
-flask_api.add_resource(api.FlightData, '/api/flightdata')
+flask_api.add_resource(api.FlightData, '/api/flightdata/<string:flight_id>')
+flask_api.add_resource(api.KmlFile, '/api/flightdata/kml/<string:flight_id>')
 
 if __name__ == "__main__":
   app.run(host='0.0.0.0', port=80, debug=True, threaded=True)

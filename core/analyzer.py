@@ -50,6 +50,7 @@ class FlightDataAnalyzer(pattern.Logger):
 
     log_entry.type = models.LogEntryType.FLIGHT
     log_entry.timestamp = log_entry.get_field_value(essential.TimeOut.id())
+    log_entry.flight_id = flight_data.flight_id
     log_entry.created_at = datetime.datetime.now()
     log_entry.last_modified_at = log_entry.created_at
 
